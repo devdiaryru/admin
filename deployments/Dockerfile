@@ -1,5 +1,7 @@
 FROM node:20-alpine
 
+LABEL org.opencontainers.image.source https://github.com/devdiaryru/admin
+
 WORKDIR /usr/src/app
 
 COPY package*.json ./
