@@ -1,0 +1,15 @@
+version: '3.7'
+
+networks:
+  monitoring:
+    driver: bridge
+
+services:
+  admin-release:
+    container_name: admin_release
+    image: $DOCKER_USERNAME/admin:release
+    restart: always
+    ports:
+      - '3000:3000'
+    networks:
+      - monitoring
