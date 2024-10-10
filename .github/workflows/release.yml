@@ -35,6 +35,15 @@ jobs:
           script: |
             rm -rf /root/dev/admin/deployments
 
+      - name: List current directory before copy
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SSH_HOST_RELEASE }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
+          script: |
+            ls -la /root/dev
+
       - name: Send docker-compose file to remote server
         uses: appleboy/scp-action@v0.1.5
         with:
