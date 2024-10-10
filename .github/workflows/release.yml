@@ -35,6 +35,21 @@ jobs:
           script: |
             rm -rf /root/dev/admin/deployments
 
+      - name: Create .env file if not exists
+        run: |
+          if [ ! -f .env ]; then
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+          fi
+
+      - name: List contents of the Docker container before deploy
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SSH_HOST_RELEASE }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
+          script: |
+            docker run --rm $DOCKER_USERNAME/admin:release ls -la /app
+
       - name: List current directory before copy
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -52,12 +67,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
           source: ./deployments/docker-compose.release.yml
           target: /root/dev/admin
-
-      - name: Create .env file if not exists
-        run: |
-          if [ ! -f .env ]; then
-            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
-          fi
 
       - name: Send .env file to remote server
         uses: appleboy/scp-action@v0.1.5
