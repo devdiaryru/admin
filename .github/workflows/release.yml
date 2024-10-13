@@ -49,4 +49,4 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/admin_app:latest
             docker stop admin_app || true
             docker rm admin_app || true
-            docker run -d -p 8085:80 --name admin_app ${{ secrets.DOCKER_USERNAME }}/admin_app:latest
+            docker run -d -p 4200:70 --name admin_app ${{ secrets.DOCKER_USERNAME }}/admin_app:latest
