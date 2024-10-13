@@ -1,18 +1,32 @@
-FROM node:20-alpine
+# Dockerfile
+FROM node:20-alpine AS build
 
-LABEL org.opencontainers.image.source https://github.com/devdiaryru/admin
+# Установим рабочую директорию
+WORKDIR /app
 
-ENV APP_ROOT /usr/src/app
-WORKDIR ${APP_ROOT}
+# Скопируем файлы зависимостей
+COPY package*.json ./
 
-COPY ./package.json ./package-lock.json ./
-
+# Установим зависимости
 RUN npm install
 
+# Скопируем все остальные файлы
 COPY . .
 
+# Соберем приложение
 RUN npm run build
 
-EXPOSE 3000
+# Используем Nginx для обслуживания статических файлов
+FROM nginx:alpine
 
-CMD ["npm", "run", "preview"]
+# Копируем собранное приложение в Nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Копируем конфигурацию Nginx
+COPY nginx-admin.conf /etc/nginx/conf.d/admin.conf
+
+# Открываем порт 80
+EXPOSE 80
+
+# Команда для запуска Nginx
+CMD ["nginx", "-g", "daemon off;"]
