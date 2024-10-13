@@ -1,8 +1,13 @@
 name: RELEASE
 
+# on:
+#   release:
+#     types: [released]
+
 on:
-  release:
-    types: [released]
+  push:
+    branches:
+      - main
 
 jobs:
   Build:
@@ -35,15 +40,6 @@ jobs:
           script: |
             rm -rf /root/dev/admin/deployments
 
-      - name: List contents of the Docker container before deploy
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.SSH_HOST_RELEASE }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
-          script: |
-            docker run --rm adriandmitruk/admin:release ls -la /app
-
       - name: List current directory before copy
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -59,7 +55,7 @@ jobs:
           host: ${{ secrets.SSH_HOST_RELEASE }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
-          source: ./deployments/docker-compose.release.yml
+          source: ./usr/src/app/deployments/docker-compose.release.yml
           target: /root/dev/admin
 
       - name: Create .env file if not exists
