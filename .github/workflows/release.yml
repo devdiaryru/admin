@@ -1,8 +1,5 @@
-name: RELEASE
-
-# on:
-#   release:
-#     types: [released]
+# .github/workflows/deploy.yml
+name: Deploy to Admin Panel
 
 on:
   push:
@@ -10,77 +7,46 @@ on:
       - main
 
 jobs:
-  Build:
-    name: Build and publish Docker image
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Pull project
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/admin:release -f ./Dockerfile .
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Login to DockerHub
-        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-      - name: Publish image to DockerHub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/admin:release
-
-  Deploy:
-    name: Deploy the project to the server
-    needs: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Remove old code
-        uses: appleboy/ssh-action@v0.1.5
+        uses: docker/login-action@v2
         with:
-          host: ${{ secrets.SSH_HOST_RELEASE }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
-          script: |
-            rm -rf /root/dev/admin/deployments
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: List current directory before copy
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.SSH_HOST_RELEASE }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
-          script: |
-            ls -la /root/dev
-
-      - name: Send docker-compose file to remote server
-        uses: appleboy/scp-action@v0.1.5
-        with:
-          host: ${{ secrets.SSH_HOST_RELEASE }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
-          source: ./docker-compose.yml
-          target: /root/dev/admin
-          ebug: true
-
-      - name: Create .env file if not exists
+      - name: Build and push Docker image
         run: |
-          if [ ! -f .env ]; then
-            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
-          fi
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/admin_app:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/admin_app:latest
 
-      - name: Send .env file to remote server
-        uses: appleboy/scp-action@v0.1.5
-        with:
-          host: ${{ secrets.SSH_HOST_RELEASE }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
-          source: .env
-          target: /root/dev/admin/deployments
-
-      - name: Restart container
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.SSH_HOST_RELEASE }}
-          username: ${{ secrets.SSH_USER }}
+          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
           script: |
-            cd /root/dev/admin/deployments
-            docker pull $DOCKER_USERNAME/admin:release
-            docker-compose -f docker-compose.release.yml up --build -d
+            docker pull ${{ secrets.DOCKER_USERNAME }}/admin_app:latest
+            docker stop admin_app || true
+            docker rm admin_app || true
+            docker run -d -p 8085:80 --name admin_app ${{ secrets.DOCKER_USERNAME }}/admin_app:latest
