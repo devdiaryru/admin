@@ -55,7 +55,7 @@ jobs:
           host: ${{ secrets.SSH_HOST_RELEASE }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
-          source: /deployments/docker-compose.release.yml
+          source: deployments/docker-compose.release.yml
           target: /root/dev/admin
 
       - name: Create .env file if not exists
