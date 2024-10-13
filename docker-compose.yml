@@ -4,7 +4,7 @@ services:
     image: ${{ secrets.DOCKER_USERNAME }}/admin:latest
     restart: always
     ports:
-      - '8081:8081' # Здесь настраивается проксирование порта для React приложения
+      - '8082:80'
     networks:
       - webnet
 
