@@ -22,6 +22,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Копируем наш конфиг Nginx
 COPY nginx.conf /etc/nginx/conf.d
 
-EXPOSE 80
+EXPOSE 8081
 
 CMD ["nginx", "-g", "daemon off;"]
