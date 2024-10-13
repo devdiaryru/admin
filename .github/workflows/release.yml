@@ -45,7 +45,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_RELEASE }}
           script: |
-            cd /root/dev/admin/deployments/docker-compose.release.yml
+            cd /root/dev/admin/deployments/
             docker-compose pull
             docker-compose up -d --force-recreate
             docker system prune -af
