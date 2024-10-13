@@ -11,7 +11,6 @@ RUN npm install
 
 COPY . .
 
-ADD ./ ${APP_ROOT}
 RUN npm run build
 
 EXPOSE 3000
